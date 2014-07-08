@@ -13,7 +13,10 @@ var CollA = 35
 var CollS = 20
 var Menu = true
 var Game = false
+var Help = false
+var Help2 = false
 var ArrowPos = 1
+var ArrowPosH = 1
 var dead = false
 var UpPress = false
 var RightPress = false
@@ -24,6 +27,48 @@ var Energy = 0
 var ShipSpeed = 0
 var Heat = 0
 var Overheated = false
+var MaxAsteroids
+var AsteroidSpeed
+var ScoreMulti
+var Pause = false
+var LVTime = 0
+var NextLvl = 5000
+
+function LevelTimer()
+{
+	if (dead == false && Pause == false){
+		LVTime += 1
+	}
+	if (LVTime == NextLvl){
+		IncreaseLevel()
+		NextLvl = 5000 + 2 * NextLvl
+	}
+	if (dead == false){
+		setTimeout("LevelTimer()", 1)
+	}
+}
+
+function LevelOne()
+{
+	if (dead == false){
+		Level = 1
+		MaxAsteroids = 0
+		MaxSAsteroids = 5
+		AsteroidSpeed = 0.5
+		ScoreMulti = 1}
+}
+
+function IncreaseLevel()
+{
+	if (dead == false){
+		Score += Level * 1000
+		Level += 1
+		MaxAsteroids += 3
+		MaxSAsteroids += 3
+		AsteroidSpeed += 0.5
+		ScoreMulti += 0.5
+	}
+}
 
 function eraseEverything()
 {
@@ -87,34 +132,34 @@ function checkCollision()
 {
 	for (var j = 0; j<AsteroidList.length; j += 1)
 		{
-		if (ObjectShip[1] > AsteroidList[j][1] - CollA && ObjectShip[1] < AsteroidList[j][1] + CollA && ObjectShip[2] > AsteroidList[j][2] - CollA && ObjectShip[2] < AsteroidList[j][2] + CollA){
+		if ((Math.pow((ObjectShip[1] - AsteroidList[j][1]), 2) + Math.pow((ObjectShip[2] - AsteroidList[j][2]), 2)) < Math.pow(CollA, 2)){
 			eraseEverything()
 			dead = true
 			break}
 		for (var n = 0; n < LaserList.length; n += 1)
 			{
-			if (LaserList[n][1] > AsteroidList[j][1] - CollA && LaserList[n][1] < AsteroidList[j][1] + CollA && LaserList[n][2] > AsteroidList[j][2] - CollA && LaserList[n][2] < AsteroidList[j][2] + CollA){
+			if ((Math.pow((LaserList[n][1] - AsteroidList[j][1]), 2) + Math.pow((LaserList[n][2] - AsteroidList[j][2]), 2)) < Math.pow(CollA, 2)){
 				LaserList.splice(n,1)
 				AsteroidBreak(AsteroidList[j][0], AsteroidList[j][1], AsteroidList[j][2])
 				AsteroidList.splice(j,1)
-				updateScore(1)
+				Score += 100 * ScoreMulti
 				break}
+			}
 			}
 	for (var s = 0; s<AsteroidListS.length; s += 1)
 		{
-		if (ObjectShip[1] > AsteroidListS[s][1] - CollS && ObjectShip[1] < AsteroidListS[s][1] + CollS && ObjectShip[2] > AsteroidListS[s][2] - CollS && ObjectShip[2] < AsteroidListS[s][2] + CollS){
+		if ((Math.pow((ObjectShip[1] - AsteroidListS[s][1]), 2) + Math.pow((ObjectShip[2] - AsteroidListS[s][2]), 2)) < Math.pow(CollS, 2)){
 			eraseEverything()
 			dead = true
 			break}
 		for (var l = 0; l < LaserList.length; l += 1)
 			{
-			if (LaserList[l][1] > AsteroidListS[s][1] - CollS && LaserList[l][1] < AsteroidListS[s][1] + CollS&& LaserList[l][2] > AsteroidListS[s][2] - CollS && LaserList[l][2] < AsteroidListS[s][2] + CollS){
+			if ((Math.pow((LaserList[l][1] - AsteroidListS[s][1]), 2) + Math.pow((LaserList[l][2] - AsteroidListS[s][2]), 2)) < Math.pow(CollS, 2)){
 				LaserList.splice(l,1)
 				AsteroidListS.splice(s,1)
-				updateScore(2)
+				Score += 100 * ScoreMulti
 				break}
 			}
-		}
 		}
 }
 
@@ -128,20 +173,23 @@ function AsteroidBreak(d, x, y)
 	AsteroidListS.push([Sdirect, x, y, 2])
 }
 
-function updateScore(s)
-{
-	Score += s * 100;
-}
-
 function drawInfo()
 {
-	ctx.fillStyle="#FFFFFF";
+	ctx.textAlign = "start"
+	ctx.fillStyle="#C4C4C4";
 	ctx.font = "20px Arial";
 	ctx.fillText("Score: " + Score, -245, 240)
+	ctx.fillText("Level " + Level, -245, -220)
+	ctx.fillText("Speed: " + ShipSpeed, 150, 240)
+	ctx.textAlign = "center"
+	if (Pause == true){
+		ctx.font = "50px Arial"
+		ctx.fillText("Paused", 0, -60)
+	}
 	if (Overheated == true){
 		ctx.fillStyle = "#FF3300";
 		ctx.font = "50px Arial";
-		ctx.fillText("OVERHEATED!", -170, -60)
+		ctx.fillText("OVERHEATED!", 0, -60)
 	}
 }
 
@@ -165,13 +213,13 @@ function moveEverything()
 			}
 		for (var j = 0; j<AsteroidList.length; j += 1)
 			{
-			AsteroidList[j][1] += 1.5 * Math.sin(AsteroidList[j][0]*Math.PI/180)
-			AsteroidList[j][2] -= 1.5 * Math.cos(AsteroidList[j][0]*Math.PI/180)
+			AsteroidList[j][1] += AsteroidSpeed * Math.sin(AsteroidList[j][0]*Math.PI/180)
+			AsteroidList[j][2] -= AsteroidSpeed * Math.cos(AsteroidList[j][0]*Math.PI/180)
 			}
 		for (var k = 0; k<AsteroidListS.length; k += 1)
 			{
-			AsteroidListS[k][1] += 2.5 * Math.sin(AsteroidListS[k][0]*Math.PI/180)
-			AsteroidListS[k][2] -= 2.5 * Math.cos(AsteroidListS[k][0]*Math.PI/180)
+			AsteroidListS[k][1] += (AsteroidSpeed + 1) * Math.sin(AsteroidListS[k][0]*Math.PI/180)
+			AsteroidListS[k][2] -= (AsteroidSpeed + 1) * Math.cos(AsteroidListS[k][0]*Math.PI/180)
 			}
 		}
 }
@@ -196,18 +244,20 @@ function timerTick()
 		Energy += 1
 		checkCollision()
 		moveEverything()}
-	mess.innerHTML = ShipSpeed
+	mess.innerHTML = LVTime
 	if (dead == false){
 		drawEverything()
-		setTimeout("timerTick()", 25);}
+		if (Pause == false){
+			setTimeout("timerTick()", 25);}}
 	else{
+		ctx.textAlign = "center"
 		ctx.fillStyle = "#FFFFFF";
 		ctx.font = "50px Arial";
-		ctx.fillText("You Died!", -105, 0)
+		ctx.fillText("You Died!", 0, -40)
 		ctx.font = "20px Arial";
-		ctx.fillText("Press ENTER to play again", -110, 40)
-		ctx.font = "20px Arial";
-		ctx.fillText("Your score was: " + Score, -245, 240)}
+		ctx.fillText("Would you like to play again?", 0, 0)
+		ctx.fillText("Y   /   N", 0, 40)
+		ctx.fillText("Your score was: " + Score, 0, 100)}
 }
 
 function drawShip()
@@ -258,24 +308,76 @@ function drawAsteroids()
 
 function drawMenu()
 {
+	ctx.textAlign = "center"
 	ctx.fillStyle = "#FFFFFF";
-	ctx.font = "50px Arial";
-	ctx.fillText("ASTEROIDS", -135, -60)
-	ctx.font = "30px Arial";
-	ctx.fillText("Play", -40, 40)
-	ctx.font = "30px Arial";
-	ctx.fillText("Help", -40, 100)
-	if (ArrowPos == 1){
-			ctx.drawImage(MenuArrow, -80, 15);
-		}
+	if (Help == false){
+		ctx.font = "50px Arial";
+		ctx.fillText("ASTEROIDS", 0, -60)
+		ctx.font = "30px Arial";
+		ctx.fillText("Play", 0, 40)
+		ctx.font = "30px Arial";
+		ctx.fillText("Help", 0, 100)
+		if (ArrowPos == 1){
+				ctx.drawImage(MenuArrow, -80, 15);
+			}
 		else if (ArrowPos == 2){
-			ctx.drawImage(MenuArrow, -80, 75);
-		}
+				ctx.drawImage(MenuArrow, -80, 75);
+			}}
+	else if (Help == true && Help2 == false){
+		ctx.font = "50px Arial";
+		ctx.fillText("Help", 0, -175)
+		ctx.drawImage(Ship1, -200, -115)
+		ctx.textAlign = "start"
+		ctx.font = "20px Arial"
+		ctx.fillText("This is your ship. Use the arrowkeys", -125, -100)
+		ctx.fillText("to move and spacebar to shoot!", -125, -80)
+		ctx.drawImage(Asteroid1, -225, -50)
+		ctx.drawImage(Asteroid2, -210, 30)
+		ctx.fillText("These are Asteroids.", -125, 20)
+		ctx.fillText("Shoot them to gain points!", -125, 40)
+		ctx.fillText("If an asteroid hits you, you will be", -125, 140)
+		ctx.fillText("defeated and the game will be over.", -125, 160)
+		ctx.textAlign = "center"
+		ctx.font = "25px Arial"
+		ctx.fillText("Main Menu", -100, 225)
+		ctx.fillText("Next Page", 100, 225)
+		if (ArrowPosH == 1){
+				ctx.drawImage(MenuArrow, -200, 202);
+			}
+		else if (ArrowPosH == 2){
+				ctx.drawImage(MenuArrow, 0, 202);
+			}
+	}
+	else if (Help2 == true){
+		ctx.font = "50px Arial"
+		ctx.fillText("Help", 0, -175)
+		ctx.textAlign = "start"
+		ctx.font = "20px Arial"
+		ctx.fillText("If you shoot too many times in a row,", -150, -100)
+		ctx.fillText("your weapon will overheat and you", -150, -80)
+		ctx.fillText("won't be able to shoot for a short while", -150, -60)
+		ctx.fillText("After a certain amount of time in game,", -150, 0)
+		ctx.fillText("the difficulty level will increase. Higher", -150, 20)
+		ctx.fillText("levels are more challenging, but also more", -150, 40)
+		ctx.fillText("rewarding!", -150, 60)
+		ctx.fillText("If you fly off one edge of the screen, you", -150, 120)
+		ctx.fillText("will appear on the other edge of the screen.", -150, 140)
+		ctx.textAlign = "center"
+		ctx.font = "25px Arial"
+		ctx.fillText("Back", -130, 225)
+		ctx.fillText("Main Menu", 100, 225)
+		if (ArrowPosH == 1){
+				ctx.drawImage(MenuArrow, -200, 202);
+			}
+		else if (ArrowPosH == 2){
+				ctx.drawImage(MenuArrow, 0, 202);
+			}
+	}
 }
 
 function AsteroidCreate()
 {
-	if (AsteroidList.length < 7){
+	if (AsteroidList.length < MaxAsteroids){
 		Aorigin = Math.floor(Math.random()*4)
 		var AoriginX
 		var AoriginY
@@ -304,6 +406,35 @@ function AsteroidCreate()
 		}
 		Adirect += Math.floor((Math.random()*90)-44)
 		AsteroidList.push([Adirect, AoriginX, AoriginY, Aorigin, 1])} //Direction, X, y, original side, size
+	if (AsteroidListS.length < MaxSAsteroids){
+		ASorigin = Math.floor(Math.random()*4)
+		var ASoriginX
+		var ASoriginY
+		switch(ASorigin)
+		{
+		case 0: //Top
+			ASoriginX = Math.floor((Math.random()*500)-249)
+			ASoriginY = -250 - SizeS
+			ASdirect = 180
+			break;
+		case 1: //Bottom
+			ASoriginX = Math.floor((Math.random()*500)-249)
+			ASoriginY = 250 + SizeS
+			ASdirect = 90
+			break;
+		case 2: //Right
+			ASoriginY = Math.floor((Math.random()*500)-249)
+			ASoriginX = 250 + SizeS
+			ASdirect = 270
+			break;
+		case 3: //Left
+			ASoriginY = Math.floor((Math.random()*500)-249)
+			ASoriginX = -250 - SizeS
+			ASdirect = 90
+			break;
+		}
+		ASdirect += Math.floor((Math.random()*90)-44)
+		AsteroidListS.push([ASdirect, ASoriginX, ASoriginY, ASorigin, 1])} //Direction, X, y, original side, size
 	NextA = (Math.floor((Math.random()*5)+2)*500);
 	setTimeout("AsteroidCreate()", NextA);
 }
@@ -328,12 +459,16 @@ function launchGame()
 	direct = 0
 	Energy = 0
 	Heat = 0
+	LVTime = 0
+	NextLvl = 5000
 	ObjectShip = Array(0, 0, 0)
 	LaserList = Array()
 	AsteroidList = Array()
 	AsteroidListS = Array()
 	setTimeout("AsteroidCreate()", 1000);
 	setTimeout("Cooldown()", 1000)
+	setTimeout("LevelTimer()", 1)
+	LevelOne()
 }
  
 function Replay()
@@ -347,6 +482,8 @@ function Replay()
 	direct = 0
 	Energy = 0
 	Heat = 0
+	LVTime = 0
+	NextLvl = 5000
 	ObjectShip = Array(0, 0, 0)
 	LaserList = Array()
 	AsteroidList = Array()
@@ -354,6 +491,8 @@ function Replay()
 	setTimeout("AsteroidCreate()", 1000);
 	setTimeout("timerTick()", 25);
 	setTimeout("Cooldown()", 1000)
+	setTimeout("LevelTimer()", 1)
+	LevelOne()
 }
 
 </script>
@@ -365,17 +504,23 @@ function Replay()
 function PressKey(k)
 {
 	var key = k.keyCode
-	if (dead && key != 13 && key != 8){
+	if (dead && key != 89 && key != 78){
 		key = 0}
 	switch(key)
 	{
 	case 39: // Right
 		if (Game == true && Menu == false){
 			RightPress = true}
+		else if (Game == false && Menu == true && Help == true && ArrowPosH < 2){
+			ArrowPosH = 2
+		}
 		break;
 	case 37: // Left
 		if (Game == true && Menu == false){
 			LeftPress = true}
+		else if (Game == false && Menu == true && Help == true && ArrowPosH > 1){
+			ArrowPosH = 1
+		}
 		break;
 	case 38: // Up
 		if (Game == true && Menu == false){
@@ -397,12 +542,31 @@ function PressKey(k)
 		SpacePress = true
 		break;
 	case 13: // Enter
-		if (dead){
-			Replay()}
 		if (Menu == true && Game == false && ArrowPos == 1){
 			launchGame()}
+		else if (Menu == true && Game == false && Help == false && ArrowPos == 2){
+			Help = true
+		}
+		else if (Menu == true && Game == false && Help == true && Help2 == false && ArrowPosH == 1){
+			Help = false
+		}
+		else if (Menu == true && Game == false && Help == true && Help2 == false && ArrowPosH == 2){
+			Help2 = true
+		}
+		else if (Menu == true && Game == false && Help == true && Help2 == true && ArrowPosH == 1){
+			Help2 = false
+		}
+		else if (Menu == true && Game == false && Help == true && Help2 == true && ArrowPosH == 2){
+			Help2 = false
+			Help = false
+			ArrowPosH = 1
+		}
 		break;
-	case 8: // Backspace
+	case 89: // Y
+		if (dead){
+			Replay()}
+		break;
+	case 78: // N
 		if (dead){
 			Menu = true
 			Game = false
@@ -410,6 +574,16 @@ function PressKey(k)
 			setTimeout("timerTick()", 25);
 		}
 		break;
+	case 80: //P
+		if (dead == false && Game == true && Menu == false){
+			if (Pause == false){
+				Pause = true
+			}
+			else if (Pause == true){
+				Pause = false
+				setTimeout("timerTick()", 25)
+			}
+		}
 	}
 }
 
