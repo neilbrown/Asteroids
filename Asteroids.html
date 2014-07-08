@@ -32,23 +32,25 @@ var AsteroidSpeed
 var ScoreMulti
 var Pause = false
 var LVTime = 0
-var NextLvl = 5000
+var SNextLvl = 3000
 
-function LevelTimer()
+function LevelTimer() //Keeps track of how long you've been playing, and advances to the next level accordingly
 {
 	if (dead == false && Pause == false){
 		LVTime += 1
 	}
 	if (LVTime == NextLvl){
 		IncreaseLevel()
-		NextLvl = 5000 + 2 * NextLvl
+		if (Level < 5){
+			NextLvl = 2 * NextLvl
+		}
 	}
 	if (dead == false){
 		setTimeout("LevelTimer()", 1)
 	}
 }
 
-function LevelOne()
+function LevelOne() //Sets the values that change based on level to their default values
 {
 	if (dead == false){
 		Level = 1
@@ -58,7 +60,7 @@ function LevelOne()
 		ScoreMulti = 1}
 }
 
-function IncreaseLevel()
+function IncreaseLevel() //Increments all values by the required amount when leveling up
 {
 	if (dead == false){
 		Score += Level * 1000
@@ -70,13 +72,13 @@ function IncreaseLevel()
 	}
 }
 
-function eraseEverything()
+function eraseEverything() //Erases the screen in preperation for re-drawing
 {
 	ctx.fillStyle="#000000";
 	ctx.fillRect(-250, -250, 500, 500);	
 }
 
-function keyTick()
+function keyTick() //Repeats player input actions if the key is held down
 {
 	if (UpPress == true){
 		if (ShipSpeed < 50){
@@ -112,7 +114,7 @@ function keyTick()
 	}
 }
 
-function Cooldown()
+function Cooldown() //cools down the laser gun over time if it isn't being shot
 {
 	if(dead == false){
 		if (SpacePress == false){
@@ -128,7 +130,7 @@ function Cooldown()
 	}
 }
 
-function checkCollision()
+function checkCollision() //checks for collisions of asteroids with either lasers or the ship
 {
 	for (var j = 0; j<AsteroidList.length; j += 1)
 		{
@@ -163,7 +165,7 @@ function checkCollision()
 		}
 }
 
-function AsteroidBreak(d, x, y)
+function AsteroidBreak(d, x, y) //breaks up larger asteroids into smaller ones when they are shot
 {
 	Sdirect = d
 	Sdirect += Math.floor((Math.random()*90)-44)
@@ -173,7 +175,7 @@ function AsteroidBreak(d, x, y)
 	AsteroidListS.push([Sdirect, x, y, 2])
 }
 
-function drawInfo()
+function drawInfo() //draws all the info in the game screen, like score and level.
 {
 	ctx.textAlign = "start"
 	ctx.fillStyle="#C4C4C4";
@@ -193,7 +195,7 @@ function drawInfo()
 	}
 }
 
-function moveEverything()
+function moveEverything() //Moves all objects; the ship, lasers and asteroids, that are on the screen by the appropriate amount
 {
 	if (Game == true && Menu == false){
 		ObjectShip[1] += (0.1 * ShipSpeed) * Math.sin(ObjectShip[0]*Math.PI/180)
@@ -224,7 +226,7 @@ function moveEverything()
 		}
 }
 
-function drawEverything()
+function drawEverything() //calls all the draw functions that redraws everything
 {
 	if (Game == true && Menu == false){
 		drawLasers()
@@ -236,20 +238,20 @@ function drawEverything()
 	}
 }
 
-function timerTick()
+function timerTick() //this is the most important function. It allows the game to run smootly:
 {
-	eraseEverything()
-	if (Game == true && Menu == false){
+	eraseEverything() //erases everything in preperation for drawing
+	if (Game == true && Menu == false){ //if you're in the game and not the menu, this runs all the functions required in the game
 		keyTick()
 		Energy += 1
 		checkCollision()
 		moveEverything()}
-	mess.innerHTML = LVTime
-	if (dead == false){
+	//mess.innerHTML = LVTime
+	if (dead == false){ //if you are not dead, whether this means you're still alive or you're in the menu, this draws everything again
 		drawEverything()
-		if (Pause == false){
+		if (Pause == false){ //and if you haven't paused the game, the timer continues
 			setTimeout("timerTick()", 25);}}
-	else{
+	else{ //if you are dead however, it draws the dead screen
 		ctx.textAlign = "center"
 		ctx.fillStyle = "#FFFFFF";
 		ctx.font = "50px Arial";
@@ -260,7 +262,7 @@ function timerTick()
 		ctx.fillText("Your score was: " + Score, 0, 100)}
 }
 
-function drawShip()
+function drawShip() //draws the spaceship in the appropriate area
 {
 	Sx = ObjectShip[1]
 	Sy = ObjectShip[2]
@@ -271,7 +273,7 @@ function drawShip()
 	ctx.translate(-Sx, -Sy);
 }
 
-function drawLasers()
+function drawLasers() //draws each laser in the appropriate area
 {
 	for (var i = 0; i<LaserList.length; i += 1)
 		{
@@ -288,7 +290,7 @@ function drawLasers()
 		}
 }
 
-function drawAsteroids()
+function drawAsteroids() //draws each asteroid in the appropriate area
 {
 	for (var i = 0; i<AsteroidList.length; i += 1)
 		{
@@ -306,11 +308,11 @@ function drawAsteroids()
 		}
 }
 
-function drawMenu()
+function drawMenu() //draws the menu. This has different functions depending on the menu screen
 {
 	ctx.textAlign = "center"
 	ctx.fillStyle = "#FFFFFF";
-	if (Help == false){
+	if (Help == false){ //this draws the main menu
 		ctx.font = "50px Arial";
 		ctx.fillText("ASTEROIDS", 0, -60)
 		ctx.font = "30px Arial";
@@ -323,7 +325,7 @@ function drawMenu()
 		else if (ArrowPos == 2){
 				ctx.drawImage(MenuArrow, -80, 75);
 			}}
-	else if (Help == true && Help2 == false){
+	else if (Help == true && Help2 == false){ //this draws the first help screen
 		ctx.font = "50px Arial";
 		ctx.fillText("Help", 0, -175)
 		ctx.drawImage(Ship1, -200, -115)
@@ -348,7 +350,7 @@ function drawMenu()
 				ctx.drawImage(MenuArrow, 0, 202);
 			}
 	}
-	else if (Help2 == true){
+	else if (Help2 == true){ //this draws the second help screen
 		ctx.font = "50px Arial"
 		ctx.fillText("Help", 0, -175)
 		ctx.textAlign = "start"
@@ -375,7 +377,7 @@ function drawMenu()
 	}
 }
 
-function AsteroidCreate()
+function AsteroidCreate() //periodicaly creates asteroids if there aren't too many on screen
 {
 	if (AsteroidList.length < MaxAsteroids){
 		Aorigin = Math.floor(Math.random()*4)
@@ -439,7 +441,7 @@ function AsteroidCreate()
 	setTimeout("AsteroidCreate()", NextA);
 }
 
-function initialize()
+function initialize() //runs at the beginning of the game, setting everything up
 {
 	c=document.getElementById("playCanvas");
 	ctx=c.getContext("2d");
@@ -448,7 +450,7 @@ function initialize()
 	setTimeout("timerTick()", 15);
 }
 
-function launchGame()
+function launchGame() //runs whenever you launch the game from the menu
 {
 	Menu = false
 	Game = true
@@ -460,7 +462,7 @@ function launchGame()
 	Energy = 0
 	Heat = 0
 	LVTime = 0
-	NextLvl = 5000
+	NextLvl = SNextLvl
 	ObjectShip = Array(0, 0, 0)
 	LaserList = Array()
 	AsteroidList = Array()
@@ -471,7 +473,7 @@ function launchGame()
 	LevelOne()
 }
  
-function Replay()
+function Replay() //runs whenever you launch the game from the dead screen
 {
 	Menu = false
 	Game = true
@@ -483,7 +485,7 @@ function Replay()
 	Energy = 0
 	Heat = 0
 	LVTime = 0
-	NextLvl = 5000
+	NextLvl = SNextLvl
 	ObjectShip = Array(0, 0, 0)
 	LaserList = Array()
 	AsteroidList = Array()
@@ -501,7 +503,7 @@ function Replay()
  
 <script>
 
-function PressKey(k)
+function PressKey(k) //this is also an incredibly important function. This performs actions based on the user pressing keys. Each key has different functions depending on whether the user is in game or in a menu
 {
 	var key = k.keyCode
 	if (dead && key != 89 && key != 78){
@@ -587,7 +589,7 @@ function PressKey(k)
 	}
 }
 
-function RaiseKey(k)
+function RaiseKey(k) //whenever a key is raised, this turns off the loop function that was running due to it being held down
 {
 	var key = k.keyCode
 	switch(key)
@@ -615,7 +617,7 @@ function RaiseKey(k)
 </head>
 
 
-<body onkeydown="PressKey(event)" onkeyup="RaiseKey(event)" onload="initialize()">
+<body onkeydown="PressKey(event)" onkeyup="RaiseKey(event)" onload="initialize()"> 
 
 <canvas id="playCanvas" width="500" height="500" style="border:1px solid #000000;">
 Your browser does not support ASTEROIDS. Please update your browser.
