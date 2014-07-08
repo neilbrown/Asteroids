@@ -15,11 +15,72 @@ var Menu = true
 var Game = false
 var ArrowPos = 1
 var dead = false
+var UpPress = false
+var RightPress = false
+var LeftPress = false
+var DownPress = false
+var SpacePress = false
+var Energy = 0
+var ShipSpeed = 0
+var Heat = 0
+var Overheated = false
 
 function eraseEverything()
 {
 	ctx.fillStyle="#000000";
 	ctx.fillRect(-250, -250, 500, 500);	
+}
+
+function keyTick()
+{
+	if (UpPress == true){
+		if (ShipSpeed < 50){
+				ShipSpeed += 1}
+	}
+	if (DownPress == true){
+		if (ShipSpeed > 0){
+				ShipSpeed -= 1}
+	}
+	if (RightPress == true){
+		if (direct < 350){
+				direct += 10} 
+			else{
+				direct = 0}
+			ObjectShip[0] = direct
+	}
+	if (LeftPress == true){
+		if (direct > 0){
+				direct -= 10}
+			else{
+				direct = 350}
+			ObjectShip[0] = direct
+	}
+	if (SpacePress == true && Overheated == false){
+		if (Energy >= 15){
+			LaserList.push([direct, ObjectShip[1] + 30 * Math.sin(direct*Math.PI/180), ObjectShip[2] - 30 * Math.cos(direct*Math.PI/180), ShipSpeed])
+			Energy = 0
+			Heat += 1
+			if (Heat > 9){
+				Overheated = true
+			}
+		}
+	}
+}
+
+function Cooldown()
+{
+	if(dead == false){
+		if (SpacePress == false){
+			if (Heat > 0){
+				Heat -= 2
+			}
+			if (Heat <= 0){
+				Heat = 0
+				Overheated = false
+			}
+		}
+		setTimeout("Cooldown()", 1000)
+	}
 }
 
 function checkCollision()
@@ -72,18 +133,23 @@ function updateScore(s)
 	Score += s * 100;
 }
 
-function drawScore()
+function drawInfo()
 {
 	ctx.fillStyle="#FFFFFF";
 	ctx.font = "20px Arial";
 	ctx.fillText("Score: " + Score, -245, 240)
+	if (Overheated == true){
+		ctx.fillStyle = "#FF3300";
+		ctx.font = "50px Arial";
+		ctx.fillText("OVERHEATED!", -170, -60)
+	}
 }
 
 function moveEverything()
 {
 	if (Game == true && Menu == false){
-		ObjectShip[1] += ShipSpeed * Math.sin(ObjectShip[0]*Math.PI/180)
-		ObjectShip[2] -= ShipSpeed * Math.cos(ObjectShip[0]*Math.PI/180)
+		ObjectShip[1] += (0.1 * ShipSpeed) * Math.sin(ObjectShip[0]*Math.PI/180)
+		ObjectShip[2] -= (0.1 * ShipSpeed) * Math.cos(ObjectShip[0]*Math.PI/180)
 		if (ObjectShip[1] < -265){
 			ObjectShip[1] += 525}
 		else if (ObjectShip[1] > 265){
@@ -94,8 +160,8 @@ function moveEverything()
 			ObjectShip[2] -= 525}
 		for (var i = 0; i<LaserList.length; i += 1)
 			{
-			LaserList[i][1] += (6 + LaserList[i][3]) * Math.sin(LaserList[i][0]*Math.PI/180)
-			LaserList[i][2] -= (6 + LaserList[i][3]) * Math.cos(LaserList[i][0]*Math.PI/180)
+			LaserList[i][1] += (6 + (0.1 * LaserList[i][3])) * Math.sin(LaserList[i][0]*Math.PI/180)
+			LaserList[i][2] -= (6 + (0.1 * LaserList[i][3])) * Math.cos(LaserList[i][0]*Math.PI/180)
 			}
 		for (var j = 0; j<AsteroidList.length; j += 1)
 			{
@@ -116,7 +182,7 @@ function drawEverything()
 		drawLasers()
 		drawAsteroids()
 		drawShip()
-		drawScore()}
+		drawInfo()}
 	else if (Game == false && Menu == true){
 		drawMenu()
 	}
@@ -126,9 +192,11 @@ function timerTick()
 {
 	eraseEverything()
 	if (Game == true && Menu == false){
+		keyTick()
+		Energy += 1
 		checkCollision()
 		moveEverything()}
-	//mess.innerHTML=
+	mess.innerHTML = ShipSpeed
 	if (dead == false){
 		drawEverything()
 		setTimeout("timerTick()", 25);}
@@ -254,17 +322,40 @@ function launchGame()
 	Menu = false
 	Game = true
 	dead = false
+	Overheated = false
 	Score = 0
 	ShipSpeed = 0
 	direct = 0
+	Energy = 0
+	Heat = 0
 	ObjectShip = Array(0, 0, 0)
 	LaserList = Array()
 	AsteroidList = Array()
 	AsteroidListS = Array()
 	setTimeout("AsteroidCreate()", 1000);
-	setTimeout("timerTick()", 15);
+	setTimeout("Cooldown()", 1000)
 }
  
+function Replay()
+{
+	Menu = false
+	Game = true
+	dead = false
+	Overheated = false
+	Score = 0
+	ShipSpeed = 0
+	direct = 0
+	Energy = 0
+	Heat = 0
+	ObjectShip = Array(0, 0, 0)
+	LaserList = Array()
+	AsteroidList = Array()
+	AsteroidListS = Array()
+	setTimeout("AsteroidCreate()", 1000);
+	setTimeout("timerTick()", 25);
+	setTimeout("Cooldown()", 1000)
+}
+
 </script>
 
 <head>
@@ -280,42 +371,34 @@ function PressKey(k)
 	{
 	case 39: // Right
 		if (Game == true && Menu == false){
-			if (direct < 350){
-				direct += 10} 
-			else{
-				direct = 0}
-			ObjectShip[0] = direct}
+			RightPress = true}
 		break;
 	case 37: // Left
 		if (Game == true && Menu == false){
-			if (direct > 0){
-				direct -= 10}
-			else{
-				direct = 350}
-			ObjectShip[0] = direct}
+			LeftPress = true}
 		break;
 	case 38: // Up
 		if (Game == true && Menu == false){
-			if (ShipSpeed < 5){
-				ShipSpeed += 1}}
+			UpPress = true
+		}
 		else if (Game == false && Menu == true && ArrowPos > 1){
 			ArrowPos -= 1
 		}
 		break;
 	case 40: // Down
 		if (Game == true && Menu == false){
-			if (ShipSpeed > 0){
-				ShipSpeed -= 1}}
+			DownPress = true
+		}
 		else if (Game == false && Menu == true && ArrowPos < 2){
 			ArrowPos += 1
 		}
 		break;
 	case 32: // Space
-		LaserList.push([direct, ObjectShip[1] + 30 * Math.sin(direct*Math.PI/180), ObjectShip[2] - 30 * Math.cos(direct*Math.PI/180), ShipSpeed])
+		SpacePress = true
 		break;
 	case 13: // Enter
 		if (dead){
-			launchGame()}
+			Replay()}
 		if (Menu == true && Game == false && ArrowPos == 1){
 			launchGame()}
 		break;
@@ -324,8 +407,31 @@ function PressKey(k)
 			Menu = true
 			Game = false
 			dead = false
-			setTimeout("timerTick()", 15);
+			setTimeout("timerTick()", 25);
 		}
+		break;
+	}
+}
+
+function RaiseKey(k)
+{
+	var key = k.keyCode
+	switch(key)
+	{
+	case 39: //Right
+		RightPress = false
+		break;
+	case 37: //Left
+		LeftPress = false
+		break;
+	case 38: //Up
+		UpPress = false
+		break;
+	case 40: // Down
+		DownPress = false
+		break;
+	case 32: // Space
+		SpacePress = false
 		break;
 	}
 }
@@ -335,7 +441,7 @@ function PressKey(k)
 </head>
 
 
-<body onkeydown="PressKey(event)" onload="initialize()">
+<body onkeydown="PressKey(event)" onkeyup="RaiseKey(event)" onload="initialize()">
 
 <canvas id="playCanvas" width="500" height="500" style="border:1px solid #000000;">
 Your browser does not support ASTEROIDS. Please update your browser.
