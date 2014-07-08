@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+
+<script>
+var direct
+var ObjectShip = new Array(0, 0, 0) //Direct, X, Y
+var LaserList = new Array()
+var AsteroidList = new Array()
+var AsteroidListS = new Array()
+var SizeA = 40
+var SizeS = 25
+var CollA = 35
+var CollS = 20
+var Menu = true
+var Game = false
+var ArrowPos = 1
+var dead = false
+
+function eraseEverything()
+{
+	ctx.fillStyle="#000000";
+	ctx.fillRect(-250, -250, 500, 500);	
+}
+
+function checkCollision()
+{
+	for (var j = 0; j<AsteroidList.length; j += 1)
+		{
+		if (ObjectShip[1] > AsteroidList[j][1] - CollA && ObjectShip[1] < AsteroidList[j][1] + CollA && ObjectShip[2] > AsteroidList[j][2] - CollA && ObjectShip[2] < AsteroidList[j][2] + CollA){
+			eraseEverything()
+			dead = true
+			break}
+		for (var n = 0; n < LaserList.length; n += 1)
+			{
+			if (LaserList[n][1] > AsteroidList[j][1] - CollA && LaserList[n][1] < AsteroidList[j][1] + CollA && LaserList[n][2] > AsteroidList[j][2] - CollA && LaserList[n][2] < AsteroidList[j][2] + CollA){
+				LaserList.splice(n,1)
+				AsteroidBreak(AsteroidList[j][0], AsteroidList[j][1], AsteroidList[j][2])
+				AsteroidList.splice(j,1)
+				updateScore(1)
+				break}
+			}
+	for (var s = 0; s<AsteroidListS.length; s += 1)
+		{
+		if (ObjectShip[1] > AsteroidListS[s][1] - CollS && ObjectShip[1] < AsteroidListS[s][1] + CollS && ObjectShip[2] > AsteroidListS[s][2] - CollS && ObjectShip[2] < AsteroidListS[s][2] + CollS){
+			eraseEverything()
+			dead = true
+			break}
+		for (var l = 0; l < LaserList.length; l += 1)
+			{
+			if (LaserList[l][1] > AsteroidListS[s][1] - CollS && LaserList[l][1] < AsteroidListS[s][1] + CollS&& LaserList[l][2] > AsteroidListS[s][2] - CollS && LaserList[l][2] < AsteroidListS[s][2] + CollS){
+				LaserList.splice(l,1)
+				AsteroidListS.splice(s,1)
+				updateScore(2)
+				break}
+			}
+		}
+		}
+}
+
+function AsteroidBreak(d, x, y)
+{
+	Sdirect = d
+	Sdirect += Math.floor((Math.random()*90)-44)
+	AsteroidListS.push([Sdirect, x, y, 2]) //Direction, X, y, size
+	Sdirect = d
+	Sdirect += Math.floor((Math.random()*90)-44)
+	AsteroidListS.push([Sdirect, x, y, 2])
+}
+
+function updateScore(s)
+{
+	Score += s * 100;
+}
+
+function drawScore()
+{
+	ctx.fillStyle="#FFFFFF";
+	ctx.font = "20px Arial";
+	ctx.fillText("Score: " + Score, -245, 240)
+}
+
+function moveEverything()
+{
+	if (Game == true && Menu == false){
+		ObjectShip[1] += ShipSpeed * Math.sin(ObjectShip[0]*Math.PI/180)
+		ObjectShip[2] -= ShipSpeed * Math.cos(ObjectShip[0]*Math.PI/180)
+		if (ObjectShip[1] < -265){
+			ObjectShip[1] += 525}
+		else if (ObjectShip[1] > 265){
+			ObjectShip[1] -= 525}
+		else if (ObjectShip[2] < -265){
+			ObjectShip[2] += 525}
+		else if (ObjectShip[2] > 265){
+			ObjectShip[2] -= 525}
+		for (var i = 0; i<LaserList.length; i += 1)
+			{
+			LaserList[i][1] += (6 + LaserList[i][3]) * Math.sin(LaserList[i][0]*Math.PI/180)
+			LaserList[i][2] -= (6 + LaserList[i][3]) * Math.cos(LaserList[i][0]*Math.PI/180)
+			}
+		for (var j = 0; j<AsteroidList.length; j += 1)
+			{
+			AsteroidList[j][1] += 1.5 * Math.sin(AsteroidList[j][0]*Math.PI/180)
+			AsteroidList[j][2] -= 1.5 * Math.cos(AsteroidList[j][0]*Math.PI/180)
+			}
+		for (var k = 0; k<AsteroidListS.length; k += 1)
+			{
+			AsteroidListS[k][1] += 2.5 * Math.sin(AsteroidListS[k][0]*Math.PI/180)
+			AsteroidListS[k][2] -= 2.5 * Math.cos(AsteroidListS[k][0]*Math.PI/180)
+			}
+		}
+}
+
+function drawEverything()
+{
+	if (Game == true && Menu == false){
+		drawLasers()
+		drawAsteroids()
+		drawShip()
+		drawScore()}
+	else if (Game == false && Menu == true){
+		drawMenu()
+	}
+}
+
+function timerTick()
+{
+	eraseEverything()
+	if (Game == true && Menu == false){
+		checkCollision()
+		moveEverything()}
+	//mess.innerHTML=
+	if (dead == false){
+		drawEverything()
+		setTimeout("timerTick()", 25);}
+	else{
+		ctx.fillStyle = "#FFFFFF";
+		ctx.font = "50px Arial";
+		ctx.fillText("You Died!", -105, 0)
+		ctx.font = "20px Arial";
+		ctx.fillText("Press ENTER to play again", -110, 40)
+		ctx.font = "20px Arial";
+		ctx.fillText("Your score was: " + Score, -245, 240)}
+}
+
+function drawShip()
+{
+	Sx = ObjectShip[1]
+	Sy = ObjectShip[2]
+	ctx.translate(Sx, Sy)
+	ctx.rotate(ObjectShip[0]*Math.PI/180);
+	ctx.drawImage(Ship1, -15, -15);
+	ctx.rotate(-ObjectShip[0]*Math.PI/180);
+	ctx.translate(-Sx, -Sy);
+}
+
+function drawLasers()
+{
+	for (var i = 0; i<LaserList.length; i += 1)
+		{
+		if (LaserList[i][2] < 300 && LaserList[i][1] < 300 && LaserList[i][2] > -300 && LaserList[i][1] > -300){
+			Lx = LaserList[i][1]
+			Ly = LaserList[i][2]
+			ctx.translate(Lx, Ly);
+			ctx.rotate(LaserList[i][0]*Math.PI/180);
+			ctx.drawImage(Laser1, -15, 0);
+			ctx.rotate(-LaserList[i][0]*Math.PI/180);
+			ctx.translate(-Lx, -Ly);}
+		else{
+			LaserList.splice(i, 1)}
+		}
+}
+
+function drawAsteroids()
+{
+	for (var i = 0; i<AsteroidList.length; i += 1)
+		{
+		if (AsteroidList[i][2] < 300 && AsteroidList[i][1] < 300 && AsteroidList[i][2] > -300 && AsteroidList[i][1] > -300){
+			ctx.drawImage(Asteroid1, AsteroidList[i][1] - SizeA, AsteroidList[i][2] - SizeA);}
+		else{
+			AsteroidList.splice(i, 1)}
+		}
+	for (var j = 0; j<AsteroidListS.length; j += 1)
+		{
+		if (AsteroidListS[j][2] < 300 && AsteroidListS[j][1] < 300 && AsteroidListS[j][2] > -300 && AsteroidListS[j][1] > -300){
+			ctx.drawImage(Asteroid2, AsteroidListS[j][1] - SizeS, AsteroidListS[j][2] - SizeS);}
+		else{
+			AsteroidListS.splice(j, 1)}
+		}
+}
+
+function drawMenu()
+{
+	ctx.fillStyle = "#FFFFFF";
+	ctx.font = "50px Arial";
+	ctx.fillText("ASTEROIDS", -135, -60)
+	ctx.font = "30px Arial";
+	ctx.fillText("Play", -40, 40)
+	ctx.font = "30px Arial";
+	ctx.fillText("Help", -40, 100)
+	if (ArrowPos == 1){
+			ctx.drawImage(MenuArrow, -80, 15);
+		}
+		else if (ArrowPos == 2){
+			ctx.drawImage(MenuArrow, -80, 75);
+		}
+}
+
+function AsteroidCreate()
+{
+	if (AsteroidList.length < 7){
+		Aorigin = Math.floor(Math.random()*4)
+		var AoriginX
+		var AoriginY
+		switch(Aorigin)
+		{
+		case 0: //Top
+			AoriginX = Math.floor((Math.random()*500)-249)
+			AoriginY = -250 - SizeA
+			Adirect = 180
+			break;
+		case 1: //Bottom
+			AoriginX = Math.floor((Math.random()*500)-249)
+			AoriginY = 250 + SizeA
+			Adirect = 90
+			break;
+		case 2: //Right
+			AoriginY = Math.floor((Math.random()*500)-249)
+			AoriginX = 250 + SizeA
+			Adirect = 270
+			break;
+		case 3: //Left
+			AoriginY = Math.floor((Math.random()*500)-249)
+			AoriginX = -250 - SizeA
+			Adirect = 90
+			break;
+		}
+		Adirect += Math.floor((Math.random()*90)-44)
+		AsteroidList.push([Adirect, AoriginX, AoriginY, Aorigin, 1])} //Direction, X, y, original side, size
+	NextA = (Math.floor((Math.random()*5)+2)*500);
+	setTimeout("AsteroidCreate()", NextA);
+}
+
+function initialize()
+{
+	c=document.getElementById("playCanvas");
+	ctx=c.getContext("2d");
+	ctx.translate(250, 250);
+	mess = document.getElementById("message");
+	setTimeout("timerTick()", 15);
+}
+
+function launchGame()
+{
+	Menu = false
+	Game = true
+	dead = false
+	Score = 0
+	ShipSpeed = 0
+	direct = 0
+	ObjectShip = Array(0, 0, 0)
+	LaserList = Array()
+	AsteroidList = Array()
+	AsteroidListS = Array()
+	setTimeout("AsteroidCreate()", 1000);
+	setTimeout("timerTick()", 15);
+}
+ 
+</script>
+
+<head>
+ 
+<script>
+
+function PressKey(k)
+{
+	var key = k.keyCode
+	if (dead && key != 13 && key != 8){
+		key = 0}
+	switch(key)
+	{
+	case 39: // Right
+		if (Game == true && Menu == false){
+			if (direct < 350){
+				direct += 10} 
+			else{
+				direct = 0}
+			ObjectShip[0] = direct}
+		break;
+	case 37: // Left
+		if (Game == true && Menu == false){
+			if (direct > 0){
+				direct -= 10}
+			else{
+				direct = 350}
+			ObjectShip[0] = direct}
+		break;
+	case 38: // Up
+		if (Game == true && Menu == false){
+			if (ShipSpeed < 5){
+				ShipSpeed += 1}}
+		else if (Game == false && Menu == true && ArrowPos > 1){
+			ArrowPos -= 1
+		}
+		break;
+	case 40: // Down
+		if (Game == true && Menu == false){
+			if (ShipSpeed > 0){
+				ShipSpeed -= 1}}
+		else if (Game == false && Menu == true && ArrowPos < 2){
+			ArrowPos += 1
+		}
+		break;
+	case 32: // Space
+		LaserList.push([direct, ObjectShip[1] + 30 * Math.sin(direct*Math.PI/180), ObjectShip[2] - 30 * Math.cos(direct*Math.PI/180), ShipSpeed])
+		break;
+	case 13: // Enter
+		if (dead){
+			launchGame()}
+		if (Menu == true && Game == false && ArrowPos == 1){
+			launchGame()}
+		break;
+	case 8: // Backspace
+		if (dead){
+			Menu = true
+			Game = false
+			dead = false
+			setTimeout("timerTick()", 15);
+		}
+		break;
+	}
+}
+
+</script>
+
+</head>
+
+
+<body onkeydown="PressKey(event)" onload="initialize()">
+
+<canvas id="playCanvas" width="500" height="500" style="border:1px solid #000000;">
+Your browser does not support ASTEROIDS. Please update your browser.
+</canvas>
+
+<div id="message"></div>
+
+<img id="Ship1" src="Ship1.png" alt="Ship1" width="30" height="30" style=display:none>
+<img id="Laser1" src="Laser1.png" alt="Laser1" width="30" height="30" style=display:none>
+<img id="Asteroid1" src="Asteroid1.png" alt="Laser1" width="80" height="80" style=display:none>
+<img id="Asteroid2" src="Asteroid2.png" alt="Asteroid2" width="80" height="80" style=display:none>
+<img id="MenuArrow" src="MenuArrow.png" alt="MenuArrow" width="30" height="30" style=display:none>
+
+</body>
+</html>
